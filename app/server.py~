@@ -1,0 +1,31 @@
+import os
+import numpy as np
+import pprint
+import tensorflow as tf
+import pandas as pd
+import matplotlib.pyplot as plt
+
+PATH_TO_IMAGE = "12CLASS/TE
+json_file = open('model.json', 'r')
+loaded_model_json = json_file.read()
+json_file.close()
+model = tf.keras.models.model_from_json(loaded_model_json)
+model.load_weights("weights.h5")
+dicty = {'blight': 0,
+ 'greening': 1,
+ 'healthy': 2,
+ 'measles': 3,
+ 'mildew': 4,
+ 'mold': 5,
+ 'rot': 6,
+ 'rust': 7,
+ 'scorch': 8,
+ 'spot': 9,
+ 'virus': 10}
+
+
+
+
+
+
+
