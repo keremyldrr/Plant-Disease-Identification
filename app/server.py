@@ -19,11 +19,16 @@ class Plant_Disease(Resource):
     def get(self,image_path=""):
         #print(image_path)
         if image_path!="favicon.ico":
+            json_file = open('model.json', 'r')
+            loaded_model_json = json_file.read()
+            json_file.close()
+            model = tf.keras.models.model_from_json(loaded_model_json)
+            model.load_weights("weights.h5")
             img = plt.imread(image_path[:])
             #print(img.shape)
-            img = np.reshape(img,(256,256,3))
+            img = np.resize(img,(256,256,3))
             img = np.expand_dims(img,axis=0)        
-            print(np.argmax(model.predict(img)))
+            pred = np.argmax(model.predict(img))
             try:
                 pred = np.argmax(model.predict(img))
             except:
@@ -45,11 +50,7 @@ dicty = {0:'blight' ,
          10:'virus'}
 
         
-json_file = open('model.json', 'r')
-loaded_model_json = json_file.read()
-json_file.close()
-model = tf.keras.models.model_from_json(loaded_model_json)
-model.load_weights("weights.h5")
+
 
 api.add_resource(Plant,'/')
 api.add_resource(Plant_Disease, '/<string:image_path>')
