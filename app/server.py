@@ -31,28 +31,39 @@ app.config['MYSQL_DATABASE_HOST'] = '10.36.48.64'
 mysql.init_app(app)
 conn = mysql.connect()
 cursor = conn.cursor()
+#Error handling
+def CheckExtension(s):
+    index = s.rfind('.')
+    return s[index+1:] 
+
 class check(Resource):
     def get(self):
         cursor.execute("SELECT id,path_web FROM disease_job WHERE status=0")
         all_data = cursor.fetchall()
-        json_file = open('model.json', 'r')
-        loaded_model_json = json_file.read()
-        json_file.close()
-        model = tf.keras.models.model_from_json(loaded_model_json)
-        model.load_weights("weights.h5")
-        for data in all_data:
-            path = urllib.request.urlopen( "http://plantid.sabanciuniv.edu/"+data[1])
-            img = plt.imread(path,format='jpg')#format check, error handling
-           
-            img = np.resize(img,(256,256,3))
-            img = np.expand_dims(img,axis=0)        
-            pred = np.argmax(model.predict(img))
-            print(dicty[pred])
-            query = "UPDATE disease_job SET result='"+dicty[pred]+"',status=2 WHERE id="+str(data[0])
-            print(query)
-            cursor.execute(query)
+        if len(all_data) > 0:
+            json_file = open('model.json', 'r')
+            loaded_model_json = json_file.read()
+            json_file.close()
+            model = tf.keras.models.model_from_json(loaded_model_json)
+            model.load_weights("weights.h5")
+            for data in all_data:
+                path = urllib.request.urlopen( "http://plantid.sabanciuniv.edu/"+data[1])
+                ext = CheckExtension(data[1])
+                try:
+                    img = plt.imread(path,format=ext)#format check, error handling
+                finally:
+                    return json.dumps({"Image could not be read!"}),404
+                img = np.resize(img,(256,256,3))
+                img = np.expand_dims(img,axis=0)        
+                pred = np.argmax(model.predict(img))
+                print(dicty[pred])
+                query = "UPDATE disease_job SET result='"+dicty[pred]+"',status=2 WHERE id="+str(data[0])
+                print(query)
+                cursor.execute(query)
 
-        return json.dumps({"success"}),200
+            return json.dumps({"Operation successfully completed!"}),200
+        else:
+            return json.dumps({"No data is fetched!"}),400
 
 api.add_resource(check,"/identify_disease")
 app.run(debug=False)
